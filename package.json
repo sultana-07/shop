@@ -1,0 +1,21 @@
+{
+  "name": "bike-spare-parts-inventory",
+  "version": "1.0.0",
+  "description": "Bike Repair Shop Spare Parts Inventory Web App (MERN Stack)",
+  "scripts": {
+    "install-all": "npm --prefix server install && npm --prefix client install",
+    "server": "npm --prefix server run dev",
+    "client": "npm --prefix client run dev",
+    "dev": "node -e \"console.log('\\nRun Express server in one terminal: npm run server\\nRun React Vite app in another terminal: npm run client\\n')\""
+  },
+  "keywords": [
+    "mern",
+    "bike-inventory",
+    "express",
+    "react",
+    "mongodb",
+    "tailwindcss"
+  ],
+  "author": "",
+  "license": "ISC"
+}

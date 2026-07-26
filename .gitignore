@@ -1,0 +1,44 @@
+# Environment and sensitive keys
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Production and build outputs
+client/dist/
+client/build/
+dist/
+build/
+.vite/
+
+# Database and local fallback storage data
+server/data/*.json
+!server/data/.gitkeep
+*.sqlite
+*.db
+
+# Logs and Debug outputs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor and OS specific files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
