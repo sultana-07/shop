@@ -1,14 +1,18 @@
-import React from 'react';
-import { Wrench, PlusCircle, Settings, Radio } from 'lucide-react';
+import React from "react";
+import { Wrench, PlusCircle, Settings, Radio } from "lucide-react";
 
-const Navbar = ({ onOpenAddModal, totalItemsCount, onGoHome, onOpenSettings }) => {
+const Navbar = ({
+  onOpenAddModal,
+  totalItemsCount,
+  onGoHome,
+  onOpenSettings,
+}) => {
   return (
     <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          
           {/* Logo & Title */}
-          <div 
+          <div
             onClick={onGoHome}
             className="flex items-center gap-3 cursor-pointer group"
           >
@@ -18,7 +22,7 @@ const Navbar = ({ onOpenAddModal, totalItemsCount, onGoHome, onOpenSettings }) =
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-lg font-bold bg-gradient-to-r from-white via-slate-100 to-blue-200 bg-clip-text text-transparent">
-                  Bike Spare Parts Inventory
+                  Murtuza Auto Parts
                 </h1>
                 <span className="hidden lg:inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full">
                   <Radio className="w-3 h-3 animate-pulse" /> Live Syncing
@@ -50,7 +54,6 @@ const Navbar = ({ onOpenAddModal, totalItemsCount, onGoHome, onOpenSettings }) =
               </button>
             )}
           </div>
-
         </div>
       </div>
     </header>
