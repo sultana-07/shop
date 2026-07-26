@@ -78,7 +78,10 @@ const App = () => {
       const res = await fetch(CATEGORIES_API_URL);
       const data = await res.json();
       if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-        setCategories(data.data);
+        setCategories((prev) => {
+          if (JSON.stringify(prev) === JSON.stringify(data.data)) return prev;
+          return data.data;
+        });
       }
     } catch (e) {
       // Silent error on network glitch
@@ -92,7 +95,11 @@ const App = () => {
       const res = await fetch(API_BASE_URL);
       const data = await res.json();
       if (data.success) {
-        setItems(data.data || []);
+        const newItems = data.data || [];
+        setItems((prev) => {
+          if (JSON.stringify(prev) === JSON.stringify(newItems)) return prev;
+          return newItems;
+        });
       } else if (!isSilent) {
         showToast(data.message || 'Failed to fetch inventory', 'error');
       }

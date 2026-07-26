@@ -62,6 +62,8 @@ const ItemFormModal = ({
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
+    if (!isOpen) return;
+
     if (editingItem) {
       setFormData({
         bikeCompany: editingItem.bikeCompany || "Hero",
@@ -93,7 +95,7 @@ const ItemFormModal = ({
       setImageFile(null);
     }
     setErrorMsg("");
-  }, [editingItem, isOpen, categories]);
+  }, [editingItem, isOpen]);
 
   if (!isOpen) return null;
 
