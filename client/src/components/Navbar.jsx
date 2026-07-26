@@ -1,7 +1,7 @@
 import React from 'react';
-import { Wrench, PlusCircle, Tag, Radio } from 'lucide-react';
+import { Wrench, PlusCircle, Settings, Radio } from 'lucide-react';
 
-const Navbar = ({ onOpenAddModal, totalItemsCount, onGoHome, onOpenCategoryManager }) => {
+const Navbar = ({ onOpenAddModal, totalItemsCount, onGoHome, onOpenSettings }) => {
   return (
     <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -32,16 +32,6 @@ const Navbar = ({ onOpenAddModal, totalItemsCount, onGoHome, onOpenCategoryManag
 
           {/* Quick Actions */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {onOpenCategoryManager && (
-              <button
-                onClick={onOpenCategoryManager}
-                className="inline-flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700/80 transition-all"
-              >
-                <Tag className="w-3.5 h-3.5 text-blue-400" />
-                <span className="hidden sm:inline">Manage Categories</span>
-              </button>
-            )}
-
             <button
               onClick={onOpenAddModal}
               className="inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-lg shadow-blue-600/30 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
@@ -49,6 +39,16 @@ const Navbar = ({ onOpenAddModal, totalItemsCount, onGoHome, onOpenCategoryManag
               <PlusCircle className="w-4 h-4" />
               <span>Add New Item</span>
             </button>
+
+            {onOpenSettings && (
+              <button
+                onClick={onOpenSettings}
+                className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl border border-slate-700/80 transition-colors flex items-center justify-center"
+                title="Store Settings & Analytics"
+              >
+                <Settings className="w-5 h-5 text-slate-300 hover:rotate-90 transition-transform duration-300" />
+              </button>
+            )}
           </div>
 
         </div>

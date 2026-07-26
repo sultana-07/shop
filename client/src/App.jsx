@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Navbar from './components/Navbar';
-import DashboardStats from './components/DashboardStats';
 import SearchBar from './components/SearchBar';
 import CategoryGrid from './components/CategoryGrid';
 import ItemCard from './components/ItemCard';
 import ItemFormModal from './components/ItemFormModal';
-import CategoryManagerModal from './components/CategoryManagerModal';
+import SettingsModal from './components/SettingsModal';
 import ImageModal from './components/ImageModal';
 import Toast from './components/Toast';
 import { Loader2, PackageX, Plus, RefreshCw, ArrowLeft, Tag, LayoutGrid, Wrench } from 'lucide-react';
@@ -16,6 +15,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL
   : import.meta.env.DEV
     ? '/api/items'
     : `${RENDER_BACKEND_URL}/api/items`;
+
+const CATEGORIES_API_URL = API_BASE_URL.replace(/\/items$/, '/categories');
 
 const DEFAULT_CATEGORIES = [
   'Visor', 
@@ -45,10 +46,10 @@ const App = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [deleteConfirmItem, setDeleteConfirmItem] = useState(null);
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [fullscreenImageItem, setFullscreenImageItem] = useState(null);
 
-  // Dynamic Categories state with localStorage persistence
+  // Dynamic Categories state with backend API persistence & local cache fallback
   const [categories, setCategories] = useState(() => {
     try {
       const saved = localStorage.getItem('bike_inventory_categories');
@@ -62,7 +63,7 @@ const App = () => {
     return DEFAULT_CATEGORIES;
   });
 
-  // Sync categories to localStorage
+  // Sync categories to localStorage cache
   useEffect(() => {
     try {
       localStorage.setItem('bike_inventory_categories', JSON.stringify(categories));
@@ -70,6 +71,19 @@ const App = () => {
       console.error('Error saving categories:', e);
     }
   }, [categories]);
+
+  // Fetch Categories from Backend API (Real-time sync across all devices)
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch(CATEGORIES_API_URL);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        setCategories(data.data);
+      }
+    } catch (e) {
+      // Silent error on network glitch
+    }
+  };
 
   // Fetch Items from Backend API (Initial load or manual refresh)
   const fetchItems = async (isSilent = false) => {
@@ -92,16 +106,19 @@ const App = () => {
     }
   };
 
-  // Real-time multi-device sync: poll server silently every 3 seconds & auto-sync on window focus
+  // Real-time multi-device sync: poll server items & categories silently every 3 seconds
   useEffect(() => {
     fetchItems(false);
+    fetchCategories();
 
     const intervalId = setInterval(() => {
       fetchItems(true);
+      fetchCategories();
     }, 3000);
 
     const handleFocus = () => {
       fetchItems(true);
+      fetchCategories();
     };
 
     window.addEventListener('focus', handleFocus);
@@ -126,22 +143,54 @@ const App = () => {
     );
   }, [items, categories]);
 
-  // Category management functions
-  const handleAddCategory = (newCat) => {
+  // Category management functions with backend API sync
+  const handleAddCategory = async (newCat) => {
     if (!categories.some(c => c.toLowerCase() === newCat.toLowerCase())) {
       setCategories(prev => [...prev, newCat]);
     }
+    try {
+      const res = await fetch(CATEGORIES_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCat }),
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setCategories(data.data);
+      }
+    } catch (e) {
+      console.error('Error adding category to server:', e);
+    }
   };
 
-  const handleRemoveCategory = (catToRemove) => {
+  const handleRemoveCategory = async (catToRemove) => {
     setCategories(prev => prev.filter(c => c.toLowerCase() !== catToRemove.toLowerCase()));
     if (selectedCategory?.toLowerCase() === catToRemove.toLowerCase()) {
       setSelectedCategory(null);
     }
+    try {
+      const res = await fetch(`${CATEGORIES_API_URL}/${encodeURIComponent(catToRemove)}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setCategories(data.data);
+      }
+    } catch (e) {
+      console.error('Error deleting category from server:', e);
+    }
   };
 
-  const handleResetCategories = () => {
-    setCategories(DEFAULT_CATEGORIES);
+  const handleResetCategories = async () => {
+    try {
+      const res = await fetch(`${CATEGORIES_API_URL}/reset`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setCategories(data.data);
+      }
+    } catch (e) {
+      console.error('Error resetting categories on server:', e);
+    }
   };
 
   // Google-style multi-token search & category filtering
@@ -292,20 +341,13 @@ const App = () => {
         onOpenAddModal={handleOpenAddModal}
         totalItemsCount={activeItems.length}
         onGoHome={handleGoHome}
-        onOpenCategoryManager={() => setIsCategoryModalOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         
-        {/* Dashboard Metric Summary Cards */}
-        <DashboardStats
-          items={activeItems}
-          filterLowStock={filterLowStock}
-          setFilterLowStock={setFilterLowStock}
-        />
-
-        {/* Large Google-style Search Bar */}
+        {/* Top Prominent Search Bar */}
         <SearchBar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -340,9 +382,9 @@ const App = () => {
           ))}
 
           <button
-            onClick={() => setIsCategoryModalOpen(true)}
+            onClick={() => setIsSettingsOpen(true)}
             className="px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-900/60 border border-slate-800 hover:border-blue-500/50 text-blue-400 hover:text-white transition-all flex items-center gap-1 shrink-0"
-            title="Add or Remove Categories"
+            title="Manage Categories in Settings"
           >
             <Wrench className="w-3.5 h-3.5" />
             + Category
@@ -405,7 +447,7 @@ const App = () => {
             items={activeItems}
             categories={availableCategories}
             onSelectCategory={handleSelectCategory}
-            onOpenCategoryManager={() => setIsCategoryModalOpen(true)}
+            onOpenCategoryManager={() => setIsSettingsOpen(true)}
           />
         ) : filteredItems.length === 0 ? (
           /* Empty Search or Inventory View */
@@ -464,10 +506,13 @@ const App = () => {
         categories={availableCategories}
       />
 
-      {/* Category Manager Modal */}
-      <CategoryManagerModal
-        isOpen={isCategoryModalOpen}
-        onClose={() => setIsCategoryModalOpen(false)}
+      {/* Store Settings & Category Manager Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        items={activeItems}
+        filterLowStock={filterLowStock}
+        setFilterLowStock={setFilterLowStock}
         categories={availableCategories}
         onAddCategory={handleAddCategory}
         onRemoveCategory={handleRemoveCategory}

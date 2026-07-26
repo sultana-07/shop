@@ -133,8 +133,12 @@ const seedDataIfNeeded = async (isMongo) => {
   }
 };
 
+const categoryRoutes = require('./routes/categoryRoutes');
+const categoryController = require('./controllers/categoryController');
+
 // API Routes
 app.use('/api/items', itemRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -210,6 +214,7 @@ const startRenderKeepAlive = (port) => {
 // Connect DB & Start Server
 connectDB().then((isMongo) => {
   seedDataIfNeeded(isMongo);
+  categoryController.seedDefaultCategoriesIfNeeded();
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
     startRenderKeepAlive(PORT);
