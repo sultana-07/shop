@@ -141,7 +141,23 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date() });
 });
 
-// Serve static React client build in production
+// Root API Server route
+app.get('/', (req, res, next) => {
+  const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
+  if (fs.existsSync(clientDistPath)) {
+    return res.sendFile(path.join(clientDistPath, 'index.html'));
+  }
+  res.json({
+    status: 'online',
+    message: 'Bike Spare Parts Inventory Backend API is Live',
+    endpoints: {
+      health: '/api/health',
+      items: '/api/items'
+    }
+  });
+});
+
+// Serve static React client build if present
 const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
 if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));

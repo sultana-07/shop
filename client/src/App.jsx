@@ -10,7 +10,12 @@ import ImageModal from './components/ImageModal';
 import Toast from './components/Toast';
 import { Loader2, PackageX, Plus, RefreshCw, ArrowLeft, Tag, LayoutGrid, Wrench } from 'lucide-react';
 
-const API_BASE_URL = '/api/items';
+const RENDER_BACKEND_URL = 'https://shop-jnis.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api/items`
+  : import.meta.env.DEV
+    ? '/api/items'
+    : `${RENDER_BACKEND_URL}/api/items`;
 
 const DEFAULT_CATEGORIES = [
   'Visor', 
