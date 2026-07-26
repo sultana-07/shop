@@ -141,12 +141,61 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date() });
 });
 
+// Serve static React client build in production
+const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(clientDistPath, 'index.html'));
+    }
+  });
+}
+
 const PORT = process.env.PORT || 5000;
+
+// Render Self-Ping Keep-Alive service (Active between 8:00 AM and 10:00 PM)
+const startRenderKeepAlive = (port) => {
+  const http = require('http');
+  const https = require('https');
+  const PING_INTERVAL_MS = 10 * 60 * 1000; // Ping every 10 minutes to prevent 15-min Render idle sleep
+
+  console.log('Keep-Alive Service initialized (Active: 8 AM to 10 PM IST).');
+
+  setInterval(() => {
+    const renderUrl = process.env.RENDER_EXTERNAL_URL || process.env.APP_URL || `http://localhost:${port}`;
+    const healthUrl = `${renderUrl.replace(/\/$/, '')}/api/health`;
+
+    const timeZone = process.env.TIMEZONE || 'Asia/Kolkata'; // Default to IST (+05:30)
+    let currentHour;
+
+    try {
+      const dateStr = new Date().toLocaleString('en-US', { timeZone, hour: '2-digit', hour12: false });
+      currentHour = parseInt(dateStr, 10);
+    } catch {
+      currentHour = new Date().getHours();
+    }
+
+    // Active window: 8 AM (8:00) to 10 PM (22:00)
+    if (currentHour >= 8 && currentHour < 22) {
+      const client = healthUrl.startsWith('https') ? https : http;
+
+      client.get(healthUrl, (res) => {
+        console.log(`[Keep-Alive Ping] (${new Date().toLocaleTimeString('en-US', { timeZone })}) Pinged ${healthUrl} [Status ${res.statusCode}] - Render active`);
+      }).on('error', (err) => {
+        console.warn(`[Keep-Alive Ping Error] ${err.message}`);
+      });
+    } else {
+      console.log(`[Keep-Alive Sleeping] (${new Date().toLocaleTimeString('en-US', { timeZone })}) Hour ${currentHour}:00 is outside 8 AM - 10 PM window. Render allowed to sleep.`);
+    }
+  }, PING_INTERVAL_MS);
+};
 
 // Connect DB & Start Server
 connectDB().then((isMongo) => {
   seedDataIfNeeded(isMongo);
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
+    startRenderKeepAlive(PORT);
   });
 });
